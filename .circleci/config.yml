@@ -64,12 +64,12 @@ workflows:
           filters:
             branches:
               only:
-                - latest-tag
+                - master
       - aws-build-and-push-image:
           context: aws-ci
           filters:
             branches:
               only:
-                - latest-tag
+                - master
           requires:
             - aws-assume-role-shared
