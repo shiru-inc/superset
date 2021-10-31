@@ -1,0 +1,75 @@
+# Use the latest 2.1 version of CircleCI pipeline process engine. See: https://circleci.com/docs/2.0/configuration-reference
+version: 2.1
+
+orbs:
+  aws-cli: circleci/aws-cli@1.3.1
+  # This orb is useless since it doesn't allow assumed roles
+  # aws-ecr: circleci/aws-ecr@6.15.2
+  docker: circleci/docker@1.5.0
+  terraform: circleci/terraform@1.1.0
+  jq: circleci/jq@2.2.0
+
+jobs:
+  aws-assume-role-shared:
+    executor: aws-cli/default
+    steps:
+      - aws-cli/install
+      - aws-cli/setup:
+          profile-name: "ci-security"
+      - run:
+          name: Set up assumed role profile
+          command: |
+            aws configure set profile.ci-shared.region us-west-2
+            aws configure set profile.ci-shared.source_profile ci-security
+            aws configure set profile.ci-shared.role_arn arn:aws:iam::$AWS_ECR_ACCOUNT_ID:role/Shared-Account-Admin
+      - persist_to_workspace:
+          root: ~/.aws
+          paths:
+            - credentials
+            - config
+
+
+  aws-build-and-push-image:
+    machine:
+      image: ubuntu-2004:202107-02
+      docker_layer_caching: true
+    steps:
+      - checkout
+      - aws-cli/install
+      - docker/install-docker
+      - attach_workspace:
+          at: ~/.aws
+      - run:
+          name: Log into Amazon ECR
+          command: >
+            # get-login-password returns a password that we pipe to the docker login command
+
+            aws ecr get-login-password --profile \
+              ci-shared | docker login --username AWS \
+              --password-stdin $AWS_ECR_ACCOUNT_URL
+      - docker/build:
+          image: superset-fork:latest-tag
+          registry: $AWS_ECR_ACCOUNT_URL
+      - docker/push:
+          image: superset-fork:latest-tag
+          registry: $AWS_ECR_ACCOUNT_URL
+
+
+# Orchestrate or schedule a set of jobs
+workflows:
+  build_and_push_image:
+    jobs:
+      - aws-assume-role-shared:
+          context: aws-ci
+          filters:
+            branches:
+              only:
+                - latest-tag
+      - aws-build-and-push-image:
+          context: aws-ci
+          filters:
+            branches:
+              only:
+                - latest-tag
+          requires:
+            - aws-assume-role-shared
