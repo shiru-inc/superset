@@ -53,7 +53,6 @@ jobs:
           registry: $AWS_ECR_ACCOUNT_URL
           tag: latest-dev
       - docker/push:
-          dockerfile: Dockerfile-prd
           image: superset-fork
           registry: $AWS_ECR_ACCOUNT_URL
           tag: latest-dev
