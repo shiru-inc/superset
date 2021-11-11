@@ -51,11 +51,9 @@ jobs:
           dockerfile: Dockerfile-prd
           image: superset-fork
           registry: $AWS_ECR_ACCOUNT_URL
-          tag: latest-dev
       - docker/push:
           image: superset-fork
           registry: $AWS_ECR_ACCOUNT_URL
-          tag: latest-dev
 
 
 # Orchestrate or schedule a set of jobs
