@@ -48,7 +48,7 @@ jobs:
               ci-shared | docker login --username AWS \
               --password-stdin $AWS_ECR_ACCOUNT_URL
       - docker/build:
-          dockerfile: Dockerfile-prd
+          dockerfile: Dockerfile
           image: superset-fork
           registry: $AWS_ECR_ACCOUNT_URL
       - docker/push:
