@@ -1,7 +1,6 @@
 FROM apache/superset:latest-dev
 
 COPY --chown=superset ./docker/docker-bootstrap.sh /app/docker/
-COPY --chown=superset ./docker/docker-entrypoint.sh /app/docker/
 COPY --chown=superset ./docker/docker-init.sh /app/docker/
 COPY --chown=superset ./docker/docker-ci.sh /app/docker/
 
